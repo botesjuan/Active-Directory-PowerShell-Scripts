@@ -1,6 +1,7 @@
-# Notable Active Directory Accounts
+# Active Directory PowerShell Scripts  
 
->Purpose of these PowerShell Scripts:
+>Purpose of these PowerShell Scripts, is to get Notable Active Directory Accounts / Objects:
+  
 1. Password Spray single password against list of usernames.
 2. Extract a list of notable AD User Accounts that have not change their passwords and did not logon since given date. - Dormant
 3. List all possible accounts with SPN values kerberoastable from Active Directory.
