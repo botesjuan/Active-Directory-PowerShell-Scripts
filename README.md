@@ -5,7 +5,8 @@
 1. Extract a list of notable AD User Accounts that have not change their passwords and did not logon since given date. - Dormant  
 2. List all possible accounts with SPN values kerberoastable from Active Directory.  
 3. High value AD Computers  
-4. Password Spray single password against list of usernames.  
+4. Get the current user running permissions for all objects ACL  
+5. Password Spray single password against list of usernames.  
 
 ----  
 
@@ -61,6 +62,14 @@ Get-ADComputer -Filter * -Properties LastLogonDate |
 >PowerShell Script: `AD-account-activity-status.ps1`  
 
 >Providing an input file of user accounts to report on their, LastLogonTimestamp, if Account Enabled, When Password Last Set, If Password is set to Never Expires and value of Description field.  
+
+----  
+
+## Current user AD permissions on Objects  
+
+>PowerShell Script: `Get-user-permissions-objects-ACL.ps1`  
+
+>List the Active Directory objects that the currently logged-on user has write, modify, or full access permissions to edit.  
 
 ----  
 
