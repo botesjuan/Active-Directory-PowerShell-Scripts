@@ -42,4 +42,9 @@ foreach ($obj in $adObjects) {
 }
 
 # Output the results
-if ($results.Count
+if ($results.Count -gt 0) {
+    Write-Host "Objects with permissions:" -ForegroundColor Green
+    $results | Format-Table -AutoSize
+} else {
+    Write-Host "No objects found where you have write, modify, or full access permissions." -ForegroundColor Red
+}
