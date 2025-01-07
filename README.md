@@ -11,21 +11,25 @@
 
 ## Notable Dormant AD Users  
 
->Provide a number of days to calculate a date since before password for user accounts in Active Directory was last changed and when last account logged on.
+>PowerShell Script: `GET_ADUsers-Password_last_set_sinceDate1.ps1`  
+
+>Provide number of days to calculate a date since password for user accounts in Active Directory was last changed and when last account logged on.
 
 >Obtain the search base Distinguished name field "distinguishedName", value from active directory, using attribute editor in Active Directory Users and Computers MMC.
 
 ![AD Attribute Editor distinguishedName](/images/distinguishedName.png)
 
-Sample output from the PowerShell Script with random user account last logon date and last password set date to verify.
+>Output from the PowerShell Script with random user account last logon date and last password set date to verify.  
 
 ![AD Account from data variable verify](/images/image003.png)
 
-This can be used during redteam or penetration test security assessment.
+>This can be used during redteam or penetration test security assessment.  
 
 ----  
 
 ## Kerberoasting  
+
+>PowerShell Script: `get-kerberoastable-user-info.ps1`  
 
 >Get AD user accounts with SPN set and as result vulnerable to Kerberoasting attacks offline password cracking.  
 
@@ -49,6 +53,14 @@ Get-ADComputer -Filter * -Properties LastLogonDate |
 ```  
 
 >List the results from CSV output: `Get-Content D:\Support\servers\pay-servers-list-2025.csv`  
+
+----  
+
+## AD Account Activity  
+
+>PowerShell Script: `AD-account-activity-status.ps1`  
+
+>Providing an input file of user accounts to report on their, LastLogonTimestamp, if Account Enabled, When Password Last Set, If Password is set to Never Expires and value of Description field.  
 
 ----  
 
