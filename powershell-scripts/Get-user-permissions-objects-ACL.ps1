@@ -21,7 +21,7 @@ Write-Host "Checking permissions on objects..." -ForegroundColor Yellow
 foreach ($obj in $adObjects) {
     try {
         # Get the ACL for the current object
-        $acl = Get-Acl "AD:$($obj.DistinguishedName)"
+        $acl = Get-Acl "AD:$($obj.DistinguishedName)" -ErrorAction SilentlyContinue
         
         # Filter ACL entries for the current user
         $userPermissions = $acl.Access | Where-Object {
