@@ -71,6 +71,8 @@ Get-ADComputer -Filter * -Properties LastLogonDate |
 
 >List the Active Directory objects that the currently logged-on user has write, modify, or full access permissions to edit.  
 
+![acl-object-permissions.png](/images/acl-object-permissions.png)  
+
 ----  
 
 ## Password Spray  
