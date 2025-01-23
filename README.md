@@ -2,11 +2,31 @@
 
 >Purpose of these PowerShell Scripts, is to get Notable Active Directory Accounts or high value objects:  
   
-1. Extract a list of notable AD User Accounts that have not change their passwords and did not logon since given date. - Dormant  
-2. List all possible accounts with SPN values kerberoastable from Active Directory.  
-3. High value AD Computers  
-4. Get the current user running permissions for all objects ACL  
-5. Password Spray single password against list of usernames.  
+1. Potential weak accounts target by malicious actors with weak passwords
+2. Notable AD User Accounts that have not change their passwords and did not logon since given date. - Dormant  
+3. List all possible accounts with SPN values kerberoastable from Active Directory.  
+4. High value AD Computers  
+5. Get the current user running permissions for all objects ACL  
+6. Password Spray single password against list of usernames.  
+
+----  
+
+## Potential Weak Targets  
+
+>PowerShell active directory script to Identify accounts targeted by malicious actors that gain internal network access:
+* Enabled accounts  
+* Account created over 2 years ago  
+* password last set older than 1 year  
+* password never expires flag enabled  
+
+>Remediation:  
+* change to use strong complex passwords
+* AD user Account with no recent logon history for last 6 months must be disabled
+* Cleanup by removing all group membership and permissions  
+
+```
+Potential-weak-target-accounts.ps1
+```  
 
 ----  
 
