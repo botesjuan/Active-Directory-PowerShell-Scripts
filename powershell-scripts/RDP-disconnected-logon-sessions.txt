@@ -1,0 +1,41 @@
+# Input and output file paths
+$serversFile = "D:\SupportStore\Scripts\rdp-disconnected-sessions\servers.txt"
+$outputFile = "D:\SupportStore\Scripts\rdp-disconnected-sessions\DisconnectedSessionsReport.csv"
+
+# Check if input file exists
+if (-Not (Test-Path $serversFile)) {
+    Write-Host "Input file $serversFile not found." -ForegroundColor Red
+    exit
+}
+
+# Initialize output file with headers
+"ServerName,LogonAccount,SessionStatus,IdleTimeOrDisconnectedTime" | Out-File -FilePath $outputFile -Encoding UTF8
+
+# Read server list from file
+$servers = Get-Content $serversFile
+
+# Iterate over each server
+foreach ($server in $servers) {
+    Write-Host "Checking server: $server"
+
+    try {
+        # Query session details using qwinsta
+        $sessions = qwinsta /server:$server | ForEach-Object {
+            ($_.Trim() -replace '\s{2,}', ',').Split(',')
+        } | Where-Object { $_[0] -match '^[0-9]+$' -and $_[3] -eq 'Disc' }
+
+        # Process each disconnected session
+        foreach ($session in $sessions) {
+            $logonAccount = $session[1]
+            $status = $session[3]
+            $idleTime = $session[4]
+
+            # Append to output file
+            "$server,$logonAccount,$status,$idleTime" | Out-File -FilePath $outputFile -Append -Encoding UTF8
+        }
+    } catch {
+        Write-Host "Failed to query $server" -ForegroundColor Yellow
+    }
+}
+
+Write-Host "Report generated at $outputFile" -ForegroundColor Green
