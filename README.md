@@ -48,6 +48,52 @@ Potential-weak-target-accounts.ps1
 
 ----  
 
+## Status of AD Group Members  
+
+>Get the status of group members in group for their last logon, enabled, description, password last set dates:
+
+```PowerShell
+# Define the Active Directory group name
+$GroupName = "Group Finance Users SG"
+
+# Define the output CSV file path
+$OutputCSV = "D:\Temp\FinanceSG_Members.csv"
+
+# Import the Active Directory module (ensure RSAT is installed)
+Import-Module ActiveDirectory
+
+# Get members of the AD group
+$Members = Get-ADGroupMember -Identity $GroupName -Recursive | Where-Object { $_.objectClass -eq "user" }
+
+# Retrieve user properties
+$UserDetails = $Members | ForEach-Object {
+    $User = Get-ADUser -Identity $_.SamAccountName -Properties SamAccountName, Description, Enabled, LastLogonDate, PasswordLastSet, PasswordNeverExpires, LastLogon, LastLogonTimestamp
+    
+    # Convert LastLogon and LastLogonTimestamp to readable date format
+    $LastLogonReadable = if ($User.LastLogon -gt 0) { [datetime]::FromFileTime($User.LastLogon) } else { $null }
+    $LastLogonTimestampReadable = if ($User.LastLogonTimestamp -gt 0) { [datetime]::FromFileTime($User.LastLogonTimestamp) } else { $null }
+
+    # Construct output object
+    [PSCustomObject]@{
+        SamAccountName      = $User.SamAccountName
+        Description         = $User.Description
+        Enabled             = $User.Enabled
+        LastLogonDate       = $User.LastLogonDate
+        PasswordLastSet     = $User.PasswordLastSet
+        PasswordNeverExpires= $User.PasswordNeverExpires
+        LastLogon           = $LastLogonReadable
+        LastLogonTimestamp  = $LastLogonTimestampReadable
+    }
+}
+
+# Export to CSV
+$UserDetails | Export-Csv -Path $OutputCSV -NoTypeInformation
+
+Write-Output "Export completed: $OutputCSV"
+```  
+
+----  
+
 ## Kerberoasting  
 
 >PowerShell Script: `get-kerberoastable-user-info.ps1`  
