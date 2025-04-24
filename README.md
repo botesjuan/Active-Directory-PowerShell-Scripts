@@ -9,6 +9,9 @@
 5. Get the current user running permissions for all objects ACL  
 6. Password Spray single password against list of usernames.  
 
+>[YouTube Video: Hackers Evade Detection with PowerShell Obfuscation](https://youtu.be/t4rpsFt6n08?si=5T3hOLQl3RghwfsB)  
+>[https://powershellforhackers.com/](https://powershellforhackers.com/)  
+
 ----  
 
 ## Potential Weak Targets  
