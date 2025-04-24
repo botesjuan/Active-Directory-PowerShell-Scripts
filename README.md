@@ -121,6 +121,68 @@ Get-ADComputer -Filter * -Properties LastLogonDate |
 
 >List the results from CSV output: `Get-Content D:\Support\servers\pay-servers-list-2025.csv`  
 
+>Get the local administrator members for each server AD computer that is active and enabled with last login in past 8 days:  
+
+>Script: `Get-AD-Computer-Servers-Local-Administrator-Members.ps1`  
+
+```PowerShell
+# Output file
+$outputFile = "D:\temp\Local_Administrators_on_servers_Report.csv"
+$cutoffDate = (Get-Date).AddDays(-8)
+$serverList = @()
+
+# Step 1: Get server OS computers from AD
+$serverList = Get-ADComputer -Filter {
+    Enabled -eq $true -and
+    OperatingSystem -like "*Server*"
+} -Properties Name, OperatingSystem, LastLogonDate | Where-Object {
+    $_.LastLogonDate -ne $null -and $_.LastLogonDate -ge $cutoffDate
+}
+
+$serverList.count
+
+# Step 2: Create output structure
+$result = @()
+
+# Step 3: Loop through servers and query local administrators
+foreach ($server in $serverList) {
+    $computerName = $server.Name
+	
+    Write-Host "Checking local admins on: $computerName"
+
+    try {
+        $admins = Invoke-Command -ComputerName $computerName -ScriptBlock {
+            try {
+                $group = [ADSI]"WinNT://$env:COMPUTERNAME/Administrators,group"
+                $members = @()
+                $group.Members() | ForEach-Object {
+                    $members += $_.GetType().InvokeMember("Name", 'GetProperty', $null, $_, $null)
+                }
+                return $members
+            } catch {
+                return @("Error: $_")
+            }
+        } -ErrorAction Stop
+
+        foreach ($admin in $admins) {
+            $result += [PSCustomObject]@{
+                ComputerName = $computerName
+                Administrator = $admin
+            }
+        }
+    } catch {
+        $result += [PSCustomObject]@{
+            ComputerName = $computerName
+            Administrator = "Connection Failed: $_"
+        }
+    }
+}
+
+# Step 4: Export results to CSV
+$result | Export-Csv -Path $outputFile -NoTypeInformation
+Write-Host "Report saved to $outputFile"
+```  
+
 ----  
 
 ## AD Account Activity  
