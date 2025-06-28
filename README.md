@@ -1,14 +1,20 @@
 # Active Directory PowerShell Scripts  
 
->Purpose of these PowerShell Scripts, is to get Notable Active Directory Accounts or high value objects:  
+>PowerShell Scripts to aid in Active directory enumeration and identifying high value objects or permissions:  
   
 1. Potential weak accounts target by malicious actors with weak passwords
 2. Notable AD User Accounts that have not change their passwords and did not logon since given date. - Dormant  
-3. List all possible accounts with SPN values kerberoastable from Active Directory.  
-4. High value AD Computers  
-5. Get the current user running permissions for all objects ACL  
-6. Password Spray single password against list of usernames.  
-7. Abuse Group Policy Edit Permission on GPO.  
+3. AD Groups
+4. Accounts with SPN values kerberoastable from Active Directory.  
+5. High value AD Computers  
+6. User Behavious Activity
+7. Current user permissions for all objects ACL  
+8. Password Spray single password against list of usernames.  
+9. LAPS Discovery
+10. Workstation Resourcs
+11. Abuse Group Policy Edit Permission on GPO.  
+
+----  
 
 >[YouTube Video: Hackers Evade Detection with PowerShell Obfuscation](https://youtu.be/t4rpsFt6n08?si=5T3hOLQl3RghwfsB)  
 >[https://powershellforhackers.com/](https://powershellforhackers.com/)  
