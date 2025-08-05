@@ -18,9 +18,13 @@
 
 >[YouTube Video: Hackers Evade Detection with PowerShell Obfuscation](https://youtu.be/t4rpsFt6n08?si=5T3hOLQl3RghwfsB)  
 >[https://powershellforhackers.com/](https://powershellforhackers.com/)  
-
+  
 ----  
 
+<br><br><a href="https://www.buymeacoffee.com/botesjuan" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
+>Thanks too all for your support by buying me ***coffee***, thanks you so much `\o/`  
+  
+----  
 ## Potential Weak Targets  
 
 >PowerShell active directory script to Identify accounts targeted by malicious actors that gain internal network access:
